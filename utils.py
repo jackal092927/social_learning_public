@@ -11,7 +11,7 @@ import networkx as nx
 
 
 
-def initialize_W(n, rho):
+def initialize_W(n, rho, normalize=True):
     """
     Initialize a random nonnegative n x n matrix with sparsity controlled by rho.
 
@@ -23,8 +23,13 @@ def initialize_W(n, rho):
     W = np.random.rand(n, n)
 
     # Make the matrix sparse by setting a fraction of elements to zero
-    mask = np.random.rand(n, n) > rho
-    W[mask] = 0
+    if rho < 1:
+        mask = np.random.rand(n, n) > rho
+        W[mask] = 0
+        
+    if normalize:
+        row_sums = W.sum(axis=1, keepdims=True)
+        W = W / row_sums
 
     return W
 
@@ -136,7 +141,7 @@ def approximate_marginal_gain(Z, W, Y, S, t):
 def approximate_greedy_approximation(W, Y, max_iter=10):
     if Y.shape[1] >= 2:
         Y = np.mean(Y<0, axis=1, keepdims=True)
-    print(Y.shape)
+    # print(Y.shape)
     Z = W @ Y
     n = W.shape[0]
     S = set()
@@ -144,7 +149,7 @@ def approximate_greedy_approximation(W, Y, max_iter=10):
     best_increase = 0
     selected_i = None
 
-    for _ in range(max_iter):
+    for t in range(max_iter):
         best_increase = 0
         selected_i = None
 
@@ -167,6 +172,9 @@ def approximate_greedy_approximation(W, Y, max_iter=10):
             if gain >= best_increase:
                 best_increase = gain
                 selected_i = i
+        
+        if best_increase == 0:
+            print("Iteration:", t, "\t gain==0")
 
         if selected_i is not None:
             S.add(selected_i)
@@ -307,19 +315,55 @@ def experiment0(n, W, Y, Z, m, total_iterations, plot=True):
         objective_random.append(mean_objective_value)
 
     print("objective_random:", objective_random)
+    print("DONE!")
+
+    return objective_greedy, objective_greedy_appro, objective_random
+
+
+def experiment1(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., plot=True):
+
+    if m==0:
+        pass # TODO: compute m from Z
+
+    if max_iterations == -1:
+        max_iterations = n
+
+    def generate_permutations(n, k=5):
+        permutations = []
+        for _ in range(k):
+            perm = np.random.permutation(n)
+            permutations.append(perm)
+        return permutations
+
+    objective_random = []
+    random_seqs = generate_permutations(n)
+    t=0
+    acc = 0.
+    epsilon = 1e-10
+    while t < max_iterations and acc < early_stop - epsilon:
+        acc = np.mean([calculate_objective(Z, W, Y, seqs[:t+1]) / m for seqs in random_seqs])
+        t += 1
+        objective_random.append(acc)
+    max_iterations = t
+    print("max_iteration:\t",max_iterations)
+
+    objective_greedy = []
+    greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
+    for t in range(max_iterations):
+        objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
+        objective_greedy.append(objective_value)
+    print("objective_greedy:", objective_greedy)
+    
+    objective_greedy_appro = []
+    greedy_selection_appro = approximate_greedy_approximation(W, Y, max_iter=max_iterations)
+    for t in range(max_iterations):
+        objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
+        objective_greedy_appro.append(objective_value)
+    print("objective_greedy_appro:", objective_greedy_appro)
+
+    return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
+        
 
 
 
-    # Plotting
-    if plot:
-        t_values = range(1, total_iterations + 1)
-        plt.figure(figsize=(10, 6))
-        plt.plot(t_values, objective_random, label='Random Picking', marker='o')
-        plt.plot(t_values, objective_greedy, label='Greedy Algorithm', marker='x')
-        plt.plot(t_values, objective_greedy_appro, label='Greedy Algorithm Approximate', marker='^')
-        plt.xlabel('t (Subset Size)')
-        plt.ylabel('Objective Value')
-        plt.title('Comparison of Greedy Algorithm and Random Picking')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+
