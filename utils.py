@@ -267,7 +267,7 @@ def construct_finiteFJmodelW_from_graph(t, W, y):
     a = np.array([1 / (1 + np.sum(W[i, :])) for i in range(n)])
 
     # Compute V = diag(1 - a) * W
-    V = np.diag(1 - a) @ W
+    V = np.diag(a) @ W
 
     # Compute V^t * y for Z(t)
     # Vt_y = np.linalg.matrix_power(V, t) @ y
