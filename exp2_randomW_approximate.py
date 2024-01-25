@@ -16,10 +16,10 @@ def main():
     np.random.seed(SEED)
     
 
-    n = 500
-    k = 10
+    n = 300
+    k = 30
     rho = 0.1  # Sparsity factor for W
-    p = 0.66  # Probability for 1 in y
+    p = 0.65  # Probability for 1 in y
 
 
 
@@ -147,9 +147,9 @@ def main():
     # Plotting
     t_values = range(1, total_iterations + 1)
     plt.figure(figsize=(10, 6))
-    plt.plot(t_values, objective_random, label='Random Picking', marker='o')
     plt.plot(t_values, objective_greedy, label='Greedy Algorithm', marker='x')
     plt.plot(t_values, objective_greedy_appro, label='Greedy Algorithm Approximate', marker='^')
+    plt.plot(t_values, objective_random, label='Random Picking', marker='o')
     plt.xlabel('t (Subset Size)')
     plt.ylabel('Objective Value')
     plt.title('Comparison of Greedy Algorithm and Random Picking')
