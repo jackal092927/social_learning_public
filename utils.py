@@ -249,6 +249,38 @@ def construct_W_from_graph(G):
 
     return W
 
+def construct_finiteFJmodelW_from_graph(t, W, y):
+
+    # Number of nodes
+    n = W.shape[0]
+
+    # Compute a_i for each node
+    # a = np.array([1 / (1 + np.sum(W[i, W[i, :] > 0])) for i in range(n)])
+    a = np.array([1 / (1 + np.sum(W[i, :])) for i in range(n)])
+
+    # Compute V = diag(1 - a) * W
+    V = np.diag(1 - a) @ W
+
+    # Compute V^t * y for Z(t)
+    # Vt_y = np.linalg.matrix_power(V, t) @ y
+
+    # Compute sum of V^i * (a odot y) for Z(t) from i = 0 to t-1
+    # sum_Vi_ay_Zt = sum([np.linalg.matrix_power(V, i) @ (a * y) for i in range(t)])
+
+    # Compute Z(t)
+    # Zt = Vt_y + sum_Vi_ay_Zt
+
+    # Compute sum of V^i * diag(a) for W(t) from i = 0 to t-1
+    sum_Vi_da_Wt = sum([np.linalg.matrix_power(V, i) @ np.diag(a) for i in range(t)])
+
+    # Compute W(t)
+    Wt = np.linalg.matrix_power(V, t) + sum_Vi_da_Wt
+
+    return Wt
+
+
+
+
 
 def experiment0(n, W, Y, Z, m, total_iterations, plot=True):
   
