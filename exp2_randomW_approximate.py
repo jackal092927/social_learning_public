@@ -17,7 +17,8 @@ def main():
     np.random.seed(SEED)
     
 
-    n = 100
+
+    n = 500
     k = 30
     rho = 0.1  # Sparsity factor for W
     p = 0.65  # Probability for 1 in y
@@ -70,6 +71,7 @@ def main():
     Z = W @ Y
     m = np.sum(Z < 0)
 
+    print("randomW?\t", randomW)
     print("number of nodes:\t", n)
     print("number of articles:\t", k)
     print("sparsity factor of W:\t", rho)
@@ -114,11 +116,11 @@ def main():
     plt.figtext(0.5, -0.15, meta_info, wrap=True, horizontalalignment='left', fontsize=8)
     plt.legend()
     plt.grid(True)
-    fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{random}"
+    fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{randomW}"
     plot_fstr = f"plot_{fstr}.pdf"
     result_fstr = f"result_{fstr}.pkl"
-    dir_str = "output/"
-    plt.savefig(f'{dir_str}{plot_fstr}', format='pdf')
+    dir_str = "./output/"
+    plt.savefig(f"{dir_str}{plot_fstr}", format='pdf')
     plt.show()
 
     results = {
@@ -134,8 +136,9 @@ def main():
         "total_iteration": total_iterations,
     }
 
-    with open(result_fstr, "wb") as file:
+    with open(f"{dir_str}{result_fstr}", "wb") as file:
         pickle.dump(results, file)
+
 
 
 
