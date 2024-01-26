@@ -1,8 +1,8 @@
-
 import numpy as np
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
+import pickle
 
 
 from scipy.io import mmread
@@ -148,6 +148,7 @@ def approximate_greedy_approximation(W, Y, max_iter=10):
     S_list = []
     best_increase = 0
     selected_i = None
+    gain_zero = False
 
     for t in range(max_iter):
         best_increase = 0
@@ -156,6 +157,12 @@ def approximate_greedy_approximation(W, Y, max_iter=10):
         for i in range(n):
             if i in S:
                 continue
+            if gain_zero:
+                if selected_i is None:
+                    selected_i = i
+                    S.add(i)
+                    S_list.append(i)
+                break   
 
             # S.add(i)
             # increase = calculate_objective(Z, W, Y, S) - calculate_objective(Z, W, Y, S - {i})
@@ -167,21 +174,27 @@ def approximate_greedy_approximation(W, Y, max_iter=10):
             # S.remove(i)
 
             gain = approximate_marginal_gain(Z, W, Y, S, i)
-            if selected_i is None:
-                selected_i = i
-            if gain >= best_increase:
+            # if gain == 0: # first time gain==0
+            #     gain_zero = True
+            #     print("Iteration:", t, "\t gain==0")
+            # if selected_i is None:
+            #     selected_i = i
+            if gain > best_increase:
                 best_increase = gain
                 selected_i = i
         
-        if best_increase == 0:
-            print("Iteration:", t, "\t gain==0")
+        # if best_increase == 0:
+        #     print("Iteration:", t, "\t gain==0")
 
         if selected_i is not None:
             S.add(selected_i)
             S_list.append(selected_i)
             # print("Selected element:", selected_i, "with marginal gain:", best_increase)
         else:
-            break  # Break if no improvement
+            gain_zero = True
+            print("Iteration:", t, "\t gain==0")
+            # break  # Break if no improvement
+            continue
 
     return S_list
 
