@@ -112,8 +112,6 @@ def main():
 
     # Meta information as caption
     plt.figtext(0.5, -0.15, meta_info, wrap=True, horizontalalignment='left', fontsize=8)
-
-
     plt.legend()
     plt.grid(True)
     fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{random}"

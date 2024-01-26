@@ -7,6 +7,7 @@ import math
 
 from utils import *
 from scipy.io import mmread
+import pickle
 
 
 
@@ -17,9 +18,11 @@ def main():
     
 
     n = 300
-    k = 30
+    k = 10
     rho = 0.1  # Sparsity factor for W
     p = 0.65 # Probability for 1 in y
+
+    randomW = False
 
 
 
@@ -60,12 +63,13 @@ def main():
     # W = construct_W_from_graph(G)
 
     # randomW
-    # W = initialize_W(n, rho)
+    if randomW:
+        W = initialize_W(n, rho)
 
     Y = initialize_y(n, k, p)
     A = nx.adjacency_matrix(G).toarray()
     W = A
-    for i in range(10):
+    for i in range(5):
         W_ = construct_finiteFJmodelW_from_graph(t=i+1, W=A, y=Y)
         zero_count = np.sum(W_==0)
         print(i, zero_count)
@@ -84,73 +88,9 @@ def main():
 
     total_iterations = 2 * int(math.sqrt(n)) + 1
 
-    # Calculate objective value using greedy algorithm
-    # t_values = range(1, int(math.sqrt(n)) + 1)
-    # S_greedy = greedy_approximation(W, y)
-    # objective_greedy = calculate_objective(W, y, S_greedy)
-
-
-
-    # objective_greedy = [calculate_objective(Z, W, Y, greedy_approximation(W, Y,max_iter=t))/m for t in t_values]
-    # print(objective_greedy)
-
-    # random_repeat = 10
-
-    # # Calculate objective values for random subsets
-    # objective_random = [ np.mean([ calculate_objective(Z, W, Y, pick_k_set(n, t))/m for _ in range(random_repeat)]) for t in t_values]
-
-    # print(objective_random)
-
-    # For the greedy_approximation
-    # start_time_greedy = time.time()
-    
-    objective_greedy = []
-    # total_iterations_greedy = total_iterations
-    # greedy_selection = approximate_greedy_approximation(W, Y, max_iter=total_iterations)
-    greedy_selection = greedy_approximation(W, Y, max_iter=total_iterations)
-    for t in range(total_iterations):
-        objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
-        objective_greedy.append(objective_value)
-
-        # # Progress and time tracking
-        # if t % (total_iterations_greedy // 10) == 0 or i == total_iterations_greedy - 1:
-        #     percent_complete = (t + 1) / total_iterations_greedy * 100
-        #     elapsed_time = time.time() - start_time_greedy
-        #     print(f"Greedy Progress: {percent_complete:.2f}%, Time elapsed: {elapsed_time:.2f} seconds")
-
-    print("objective_greedy:", objective_greedy)
-        
-    objective_greedy_appro = []
-    greedy_selection_appro = approximate_greedy_approximation(W, Y, max_iter=total_iterations)
-    for t in range(total_iterations):
-        objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
-        objective_greedy_appro.append(objective_value)
-
-    print("objective_greedy_appro:", objective_greedy_appro)
-
-
-
-    # For the second for-loop
-    random_repeat = 10
-    # start_time_random = time.time()
-    objective_random = []
-    # total_iterations_random = len(t_values)
-
-    # for i, t in enumerate(t_values):
-    random_selection = pick_k_set(n, t)
-    for t in range(total_iterations):
-        random_values = [calculate_objective(Z, W, Y, random_selection[:t+1]) / m for _ in range(random_repeat)]
-        mean_objective_value = np.mean(random_values)
-        objective_random.append(mean_objective_value)
-
-        # # Progress and time tracking
-        # if i % (total_iterations_random // 10) == 0 or i == total_iterations_random - 1:
-        #     percent_complete = (i + 1) / total_iterations_random * 100
-        #     elapsed_time = time.time() - start_time_random
-        #     print(f"Random Progress: {percent_complete:.2f}%, Time elapsed: {elapsed_time:.2f} seconds")
-
-    print("objective_random:", objective_random)
-
+    results, total_iterations =  experiment1(n, W, Y, Z, m)
+    # print(results)
+    objective_greedy, objective_greedy_appro, objective_random = results
 
 
     # Plotting
@@ -162,9 +102,50 @@ def main():
     plt.xlabel('t (Subset Size)')
     plt.ylabel('Objective Value')
     plt.title('Comparison of Greedy Algorithm and Random Picking')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
+
+    # Meta information
+    meta_info = f"""`
+    Number of nodes: {n}
+    Number of articles: {Y.shape[1]}
+    Sparsity factor of W: {rho}
+    Probability of 1 in y: {p}
+    Number of negative vals: {m}
+    Random W: {randomW}
+    """
+    # plt.text(0.95, 0.05, meta_info, 
+    #         fontsize=8, verticalalignment='bottom', horizontalalignment='right', transform=plt.gca().transAxes)
+
+    # Meta information as caption
+    plt.figtext(0.5, -0.15, meta_info, wrap=True, horizontalalignment='left', fontsize=8)
     plt.legend()
     plt.grid(True)
+    fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{randomW}"
+    plot_fstr = f"plot_{fstr}.pdf"
+    result_fstr = f"result_{fstr}.pkl"
+    dir_str = "./output/"
+    plt.savefig(f"{dir_str}{plot_fstr}", format='pdf')
     plt.show()
+
+    results = {
+        "graph": None,
+        "matrixW": W, 
+        "random_seed": SEED,
+        "nodesize_n": n,
+        "articlesize_k": k,
+        "sparsity_rho": rho,  # Sparsity factor for W
+        "probability1": p,  # Probability for 1 in y
+        "negative_size": m,
+        "results": results,
+        "total_iteration": total_iterations,
+    }
+
+    with open(f"{dir_str}{result_fstr}", "wb") as file:
+        pickle.dump(results, file)
+
+
 
 
 
