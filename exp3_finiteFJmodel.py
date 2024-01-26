@@ -37,14 +37,16 @@ def main():
 
     randomW = False
 
-    # datasrc = "watts_strogatz"
-    # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
+    # datasrc = "erdos_renyi"
+    # G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
 
     # datasrc = "barabasi_albert"
     # G = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
 
-    datasrc = "erdos_renyi"
-    G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
+    datasrc = "watts_strogatz"
+    G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
+
+
 
 
 
@@ -117,7 +119,7 @@ def main():
     Random W:\t {randomW}
     #nodes:\t {Z.shape[0]}
     #articles:\t {Z.shape[1]}
-    Sparsity of W:\t {np.sum(W==0)/(W.size)}
+    W_Sparse:\t {np.sum(W==0)/(W.size)}
     Pr(y==1):\t {np.sum(Y==1)/(Y.size)}
     Count Z<0:\t {m}, {m/Z.size}
     """
@@ -138,7 +140,7 @@ def main():
     plt.plot(t_values, objective_random, label='Random Picking', marker='o')
     plt.xlabel('t (Subset Size)')
     plt.ylabel('Objective Value')
-    plt.title('Comparison of Greedy Algorithm and Random Picking')
+    plt.title('Comparison of Greedy Algorithm and Random Picking on ' + datasrc)
     # plt.legend()
     # plt.grid(True)
     # plt.show()
