@@ -2,12 +2,11 @@ import numpy as np
 import networkx as nx
 import random
 import matplotlib.pyplot as plt
-import pickle
-
+plt.rcParams['savefig.format'] = 'pdf' 
 
 from scipy.io import mmread
+import pickle
 import networkx as nx
-
 
 
 

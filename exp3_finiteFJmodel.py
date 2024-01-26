@@ -17,10 +17,10 @@ def main():
     np.random.seed(SEED)
     
 
-    n = 300
-    k = 10
+    n = 1000
+    k = 100
     rho = 0.1  # Sparsity factor for W
-    p = 0.65 # Probability for 1 in y
+    p = 0.7 # Probability for 1 in y
 
     randomW = False
 
@@ -29,11 +29,15 @@ def main():
 
 
     # ER random graph
-    # G = nx.erdos_renyi_graph(n, rho, seed=SEED, directed=False)
+    G = nx.erdos_renyi_graph(n, rho, seed=SEED, directed=False)
 
     # BA random graph
     G = nx.barabasi_albert_graph(n, 5, seed=None, initial_graph=None)
 
+    # WS random graph
+    # G = nx.watts_strogatz_graph(n=n, k=5, p=0.25)
+
+    
     # SBM random graph
     # block_k = 3
     # sz = int(n/block_k)
@@ -43,9 +47,6 @@ def main():
     # probs = [[in_p, out_p, out_p], [out_p, in_p, out_p], [out_p, out_p, in_p]]
     # # probs = [[0.25, 0.05, 0.02], [0.05, 0.35, 0.07], [0.02, 0.07, 0.40]]
     # G = nx.stochastic_block_model(sizes, probs, seed=SEED)
-
-    # WS random graph
-    # G = nx.watts_strogatz_graph(n=n, k=5, p=0.25)
 
     # GE random graph
     # G = nx.random_geometric_graph(n=n, radius=0.25)
@@ -69,8 +70,8 @@ def main():
     Y = initialize_y(n, k, p)
     A = nx.adjacency_matrix(G).toarray()
     W = A
-    for i in range(5):
-        W_ = construct_finiteFJmodelW_from_graph(t=i+1, W=A, y=Y)
+    for i in range(1,3+1):
+        W_ = construct_finiteFJmodelW_from_graph(t=i, W=A, y=Y)
         zero_count = np.sum(W_==0)
         print(i, zero_count)
         if zero_count > int(math.sqrt(n)) + 1:
