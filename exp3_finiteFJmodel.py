@@ -125,9 +125,11 @@ def main():
     """
     print(meta_info)
 
-    total_iterations = 2 * int(math.sqrt(n)) + 1
+    # total_iterations = 2 * int(math.sqrt(n)) + 1
+    max_iterations = 100
+    early_stop = 0.99
 
-    results, total_iterations =  experiment1(n, W, Y, Z, m)
+    results, total_iterations =  experiment1(n, W, Y, Z, m=m, max_iterations=max_iterations, early_stop=early_stop)
     # print(results)
     objective_greedy, objective_greedy_appro, objective_random = results
 
@@ -153,7 +155,7 @@ def main():
     plt.figtext(0.5, -0.15, meta_info, wrap=True, horizontalalignment='left', fontsize=8)
     plt.legend()
     plt.grid(True)
-    fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{randomW}"
+    fstr = f"FJ3model_DataSrc_{datasrc}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
     plot_fstr = f"plot_{fstr}.pdf"
     current_datetime = datetime.now()
     timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
