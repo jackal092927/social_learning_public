@@ -7,6 +7,7 @@ import math
 
 from utils import *
 from scipy.io import mmread
+import pickle
 
 
 
@@ -16,7 +17,7 @@ def main():
     np.random.seed(SEED)
     
 
-    n = 500
+    n = 100
     k = 30
     rho = 0.1  # Sparsity factor for W
     p = 0.65  # Probability for 1 in y
@@ -115,7 +116,28 @@ def main():
 
     plt.legend()
     plt.grid(True)
+    fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{random}"
+    plot_fstr = f"plot_{fstr}.pdf"
+    result_fstr = f"result_{fstr}.pkl"
+    dir_str = "output/"
+    plt.savefig(f'{dir_str}{plot_fstr}', format='pdf')
     plt.show()
+
+    results = {
+        "graph": None,
+        "matrixW": W, 
+        "random_seed": SEED,
+        "nodesize_n": n,
+        "articlesize_k": k,
+        "sparsity_rho": rho,  # Sparsity factor for W
+        "probability1": p,  # Probability for 1 in y
+        "negative_size": m,
+        "results": results,
+        "total_iteration": total_iterations,
+    }
+
+    with open(result_fstr, "wb") as file:
+        pickle.dump(results, file)
 
 
 
