@@ -36,17 +36,17 @@ def main():
     p = 0.6 # Probability for 1 in y
 
     randomW = False
+    save_plot = True
+    save_results = True
 
-    # datasrc = "erdos_renyi"
-    # G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
+    datasrc = "erdos_renyi"
+    G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
 
     # datasrc = "barabasi_albert"
     # G = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
 
-    datasrc = "watts_strogatz"
-    G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
-
-
+    # datasrc = "watts_strogatz"
+    # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
 
 
 
@@ -115,13 +115,13 @@ def main():
 
     # Meta information
     meta_info = f"""
-    DataSource:\t {datasrc}
-    Random W:\t {randomW}
-    #nodes:\t {Z.shape[0]}
-    #articles:\t {Z.shape[1]}
-    W_Sparse:\t {np.sum(W==0)/(W.size)}
-    Pr(y==1):\t {np.sum(Y==1)/(Y.size)}
-    Count Z<0:\t {m}, {m/Z.size}
+    DataSource: {datasrc}
+    Random W: {randomW}
+    #nodes: {Z.shape[0]}
+    #articles: {Z.shape[1]}
+    W_Sparse: {np.sum(W==0)/(W.size)}
+    Pr(y==1): {np.sum(Y==1)/(Y.size)}
+    Count Z<0: {m}, {m/Z.size}
     """
     print(meta_info)
 
@@ -155,14 +155,19 @@ def main():
     plt.figtext(0.5, -0.15, meta_info, wrap=True, horizontalalignment='left', fontsize=8)
     plt.legend()
     plt.grid(True)
-    fstr = f"FJ3model_DataSrc_{datasrc}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
-    plot_fstr = f"plot_{fstr}.pdf"
+    plt.show()
+
+
     current_datetime = datetime.now()
     timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
-    result_fstr = f"result_{fstr}_{timestamp}.pkl"
+
     dir_str = "./output/"
-    plt.savefig(f"{dir_str}{plot_fstr}", format='pdf')
-    plt.show()
+    fstr = f"FJ3model_DataSrc_{datasrc}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
+
+
+    if save_plot:
+        plot_fstr = f"plot_{fstr}.pdf"        
+        plt.savefig(f"{dir_str}{plot_fstr}_{timestamp}", format='pdf')
 
     results = {
         "graph": datasrc,
@@ -178,8 +183,10 @@ def main():
         "timestamp": timestamp,
     }
 
-    with open(f"{dir_str}{result_fstr}", "wb") as file:
-        pickle.dump(results, file)
+    if save_results:
+        result_fstr = f"result_{fstr}_{timestamp}.pkl"
+        with open(f"{dir_str}{result_fstr}", "wb") as file:
+            pickle.dump(results, file)
     
     
 

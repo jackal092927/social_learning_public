@@ -374,7 +374,7 @@ def experiment1(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
     print("size:", len(greedy_selection_appro))
     greedy_selection_appro_extns = []
     if len(greedy_selection_appro) < max_iterations:
-        T = set(range(n)) - set(greedy_selection_appro)
+        T = list(set(range(n)) - set(greedy_selection_appro))
         perms = generate_permutations(T, k=repeatk)
         for i in range(repeatk):
             greedy_selection_appro_extns.append(greedy_selection_appro + list(perms[i]) )
