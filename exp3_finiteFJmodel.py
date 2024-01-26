@@ -5,9 +5,22 @@ import copy
 import matplotlib.pyplot as plt
 import math
 
-from utils import *
 from scipy.io import mmread
 import pickle
+from datetime import datetime
+
+from utils import *
+from data_loader import *
+
+# # Create a dictionary mapping keywords to functions or objects
+# switch_dict = {
+#     'erdos_renyi': erdos_renyi_graph,
+#     'watts_strogatz': watts_strogatz_graph,
+#     'barabasi_albert': barabasi_albert_graph,
+#     'real_dataset': load_real_dataset,
+# }
+
+
 
 
 
@@ -19,20 +32,29 @@ def main():
 
     n = 1000
     k = 100
-    rho = 0.1  # Sparsity factor for W
-    p = 0.7 # Probability for 1 in y
+    rho = 0.1  # ratio of nonzeros in W
+    p = 0.6 # Probability for 1 in y
 
     randomW = False
 
+    # datasrc = "watts_strogatz"
+    # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
+
+    # datasrc = "barabasi_albert"
+    # G = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
+
+    datasrc = "erdos_renyi"
+    G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
 
 
 
 
-    # ER random graph
-    G = nx.erdos_renyi_graph(n, rho, seed=SEED, directed=False)
 
-    # BA random graph
-    G = nx.barabasi_albert_graph(n, 5, seed=None, initial_graph=None)
+    # # ER random graph
+    # G = nx.erdos_renyi_graph(n, rho, seed=SEED, directed=False)
+
+    # # BA random graph
+    # G = nx.barabasi_albert_graph(n, 5, seed=None, initial_graph=None)
 
     # WS random graph
     # G = nx.watts_strogatz_graph(n=n, k=5, p=0.25)
@@ -72,20 +94,34 @@ def main():
     W = A
     for i in range(1,3+1):
         W_ = construct_finiteFJmodelW_from_graph(t=i, W=A, y=Y)
-        zero_count = np.sum(W_==0)
-        print(i, zero_count)
-        if zero_count > int(math.sqrt(n)) + 1:
+        sparsity = np.sum(W_==0)/W_.size
+        print(i, sparsity)
+        # if sparsity > int(math.sqrt(n)) + 1:
+        if sparsity > 0.1 and sparsity < 0.95:
             W = W_
 
     Z = W @ Y
     m = np.sum(Z < 0)
 
-    print("number of nodes:\t", n)
-    print("number of articles:\t", k)
-    print("sparsity factor of W:\t", rho)
-    print("probability of 1 in y:\t", p)
+    # print("datasource:\t",  datasrc)
+    # print("number of nodes:\t", n)
+    # print("number of articles:\t", k)
+    # print("sparsity factor of W:\t", rho)
+    # print("probability of 1 in y:\t", p)
 
-    print("Number of negative elements in Z: ", m)
+    # print("Number of negative elements in Z: ", m)
+
+    # Meta information
+    meta_info = f"""
+    DataSource:\t {datasrc}
+    Random W:\t {randomW}
+    #nodes:\t {Z.shape[0]}
+    #articles:\t {Z.shape[1]}
+    Sparsity of W:\t {np.sum(W==0)/(W.size)}
+    Pr(y==1):\t {np.sum(Y==1)/(Y.size)}
+    Count Z<0:\t {m}, {m/Z.size}
+    """
+    print(meta_info)
 
     total_iterations = 2 * int(math.sqrt(n)) + 1
 
@@ -107,15 +143,7 @@ def main():
     # plt.grid(True)
     # plt.show()
 
-    # Meta information
-    meta_info = f"""`
-    Number of nodes: {n}
-    Number of articles: {Y.shape[1]}
-    Sparsity factor of W: {rho}
-    Probability of 1 in y: {p}
-    Number of negative vals: {m}
-    Random W: {randomW}
-    """
+
     # plt.text(0.95, 0.05, meta_info, 
     #         fontsize=8, verticalalignment='bottom', horizontalalignment='right', transform=plt.gca().transAxes)
 
@@ -125,13 +153,15 @@ def main():
     plt.grid(True)
     fstr = f"randomWapproximate_n{n}_k{Y.shape[1]}_rho{rho}_p{p}_m{m}_random{randomW}"
     plot_fstr = f"plot_{fstr}.pdf"
-    result_fstr = f"result_{fstr}.pkl"
+    current_datetime = datetime.now()
+    timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
+    result_fstr = f"result_{fstr}_{timestamp}.pkl"
     dir_str = "./output/"
     plt.savefig(f"{dir_str}{plot_fstr}", format='pdf')
     plt.show()
 
     results = {
-        "graph": None,
+        "graph": datasrc,
         "matrixW": W, 
         "random_seed": SEED,
         "nodesize_n": n,
@@ -141,11 +171,15 @@ def main():
         "negative_size": m,
         "results": results,
         "total_iteration": total_iterations,
+        "timestamp": timestamp,
     }
 
     with open(f"{dir_str}{result_fstr}", "wb") as file:
         pickle.dump(results, file)
+    
+    
 
+    print("Save to ==> ", f"{dir_str}{result_fstr}")
 
 
 
