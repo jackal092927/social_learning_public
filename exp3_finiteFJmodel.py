@@ -33,20 +33,29 @@ def main():
     n = 1000
     k = 100
     rho = 0.1  # ratio of nonzeros in W
-    p = 0.6 # Probability for 1 in y
+    p = 0.65 # Probability for 1 in y
 
-    randomW = False
+    randomW = True
     save_plot = True
     save_results = True
+    FJ_maxiters = 5
+    FJ_iters = 0
 
-    datasrc = "erdos_renyi"
-    G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
+    datasrc = None
+
+    G=None
+
+    # datasrc = "erdos_renyi"
+    # G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
 
     # datasrc = "barabasi_albert"
     # G = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
 
     # datasrc = "watts_strogatz"
     # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
+
+    datasrc = "random_W"
+    W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
 
 
@@ -87,21 +96,28 @@ def main():
 
     # W = construct_W_from_graph(G)
 
+
+
     # randomW
-    if randomW:
-        W = initialize_W(n, rho)
+    # if randomW:
+    #     W = initialize_W(n, rho)
+    # else: # FJ_model on random graph G
+    #     A = nx.adjacency_matrix(G).toarray()
+    #     W = A
+        
+    #     for i in range(1,FJ_maxiters+1):
+    #         W_ = construct_tstepFJmodelW_from_graph(t=i, W=A, y=Y)
+    #         sparsity = np.sum(W_==0)/W_.size
+    #         print(i, sparsity)
+    #         # if sparsity > int(math.sqrt(n)) + 1:
+    #         if sparsity > 0.1 and sparsity < 0.95:
+    #             W = W_
+    #             FJ_iters = i
+    #         else: 
+    #             break
+    #     print("FJ_iters:", FJ_iters)
 
     Y = initialize_y(n, k, p)
-    A = nx.adjacency_matrix(G).toarray()
-    W = A
-    for i in range(1,3+1):
-        W_ = construct_finiteFJmodelW_from_graph(t=i, W=A, y=Y)
-        sparsity = np.sum(W_==0)/W_.size
-        print(i, sparsity)
-        # if sparsity > int(math.sqrt(n)) + 1:
-        if sparsity > 0.1 and sparsity < 0.95:
-            W = W_
-
     Z = W @ Y
     m = np.sum(Z < 0)
 
@@ -122,6 +138,7 @@ def main():
     W_Sparse: {np.sum(W==0)/(W.size)}
     Pr(y==1): {np.sum(Y==1)/(Y.size)}
     Count Z<0: {m}, {m/Z.size}
+    FJ_iters: {FJ_iters}
     """
     print(meta_info)
 
@@ -166,8 +183,9 @@ def main():
 
 
     if save_plot:
-        plot_fstr = f"plot_{fstr}.pdf"        
-        plt.savefig(f"{dir_str}{plot_fstr}_{timestamp}", format='pdf')
+        plot_fstr = f"{dir_str}plot_{fstr}_{timestamp}.pdf"        
+        plt.savefig(plot_fstr, format='pdf')
+    print("Save to ==> ", plot_fstr)
 
     results = {
         "graph": datasrc,
@@ -181,16 +199,17 @@ def main():
         "results": results,
         "total_iteration": total_iterations,
         "timestamp": timestamp,
+        "FJ_iters": FJ_iters,
     }
 
     if save_results:
-        result_fstr = f"result_{fstr}_{timestamp}.pkl"
-        with open(f"{dir_str}{result_fstr}", "wb") as file:
+        result_fstr = f"{dir_str}result_{fstr}_{timestamp}.pkl"
+        with open(result_fstr, "wb") as file:
             pickle.dump(results, file)
     
     
 
-    print("Save to ==> ", f"{dir_str}{result_fstr}")
+    print("Save to ==> ", result_fstr)
 
 
 

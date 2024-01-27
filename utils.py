@@ -269,7 +269,7 @@ def construct_W_from_graph(G):
 
     return W
 
-def construct_finiteFJmodelW_from_graph(t, W, y):
+def construct_tstepFJmodelW_from_graph(t, W):
 
     # Number of nodes
     n = W.shape[0]
@@ -366,13 +366,14 @@ def experiment1(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
     for t in range(max_iterations):
         objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
         objective_greedy.append(objective_value)
-    print("size:", len(objective_greedy))
-    print("objective_greedy:", greedy_selection)
+    print("objective_greedy size:", len(objective_greedy))
+    print("objective_greedy:", objective_value)
     
     objective_greedy_appro = []
     greedy_selection_appro = approximate_greedy_approximation(W, Y, max_iter=max_iterations)
     print("size:", len(greedy_selection_appro))
     greedy_selection_appro_extns = []
+    # t = len(greedy_selection_appro)
     if len(greedy_selection_appro) < max_iterations:
         T = list(set(range(n)) - set(greedy_selection_appro))
         perms = generate_permutations(T, k=repeatk)
