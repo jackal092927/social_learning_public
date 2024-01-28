@@ -33,9 +33,9 @@ def main():
     n = 1000
     k = 100
     rho = 0.1  # ratio of nonzeros in W
-    p = 0.65 # Probability for 1 in y
+    p = 0.75 # Probability for 1 in y
 
-    randomW = True
+    randomW = False
     save_plot = True
     save_results = True
     FJ_maxiters = 5
@@ -54,74 +54,15 @@ def main():
     # datasrc = "watts_strogatz"
     # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
 
-    datasrc = "random_W"
-    W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
+    # datasrc = "random_W"
+    # W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
     # real data
-    # a = mmread('./dataset/delaunay_n10.mtx')
-    # G = nx.Graph(a)
-    # n = G.number_of_nodes()
+    datasrc = "real_dataset"
+    file_path = 'delaunay_n10.mtx'
+    W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
-
-
-
-
-    # # ER random graph
-    # G = nx.erdos_renyi_graph(n, rho, seed=SEED, directed=False)
-
-    # # BA random graph
-    # G = nx.barabasi_albert_graph(n, 5, seed=None, initial_graph=None)
-
-    # WS random graph
-    # G = nx.watts_strogatz_graph(n=n, k=5, p=0.25)
-
-    
-    # SBM random graph
-    # block_k = 3
-    # sz = int(n/block_k)
-    # sizes = [sz, sz, n-2*sz]
-    # in_p = 0.25
-    # out_p = 0.05
-    # probs = [[in_p, out_p, out_p], [out_p, in_p, out_p], [out_p, out_p, in_p]]
-    # # probs = [[0.25, 0.05, 0.02], [0.05, 0.35, 0.07], [0.02, 0.07, 0.40]]
-    # G = nx.stochastic_block_model(sizes, probs, seed=SEED)
-
-    # GE random graph
-    # G = nx.random_geometric_graph(n=n, radius=0.25)
-
-    # real data
-    # a = mmread('./dataset/delaunay_n10.mtx')
-    # G = nx.Graph(a)
-    # n = G.number_of_nodes()
-
-    # print("number of nodes:\t", n)
-    # print("number of articles:\t", k)
-    # print("sparsity factor of W:\t", rho)
-    # print("probability of 1 in y:\t", p)
-
-    # W = construct_W_from_graph(G)
-
-
-
-    # randomW
-    # if randomW:
-    #     W = initialize_W(n, rho)
-    # else: # FJ_model on random graph G
-    #     A = nx.adjacency_matrix(G).toarray()
-    #     W = A
-        
-    #     for i in range(1,FJ_maxiters+1):
-    #         W_ = construct_tstepFJmodelW_from_graph(t=i, W=A, y=Y)
-    #         sparsity = np.sum(W_==0)/W_.size
-    #         print(i, sparsity)
-    #         # if sparsity > int(math.sqrt(n)) + 1:
-    #         if sparsity > 0.1 and sparsity < 0.95:
-    #             W = W_
-    #             FJ_iters = i
-    #         else: 
-    #             break
-    #     print("FJ_iters:", FJ_iters)
-
+    n = W.shape[0]
     Y = initialize_y(n, k, p)
     Z = W @ Y
     m = np.sum(Z < 0)

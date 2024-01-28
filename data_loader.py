@@ -1,5 +1,6 @@
 import networkx as nx
 from utils import *
+from scipy.io import mmread
 
 # Define your random graph models and real datasets
 def erdos_renyi_graph(n=10, p=0.1, seed=0, directed=False):
@@ -13,7 +14,10 @@ def barabasi_albert_graph(n=10, m=5, seed=0):
 
 def load_real_dataset(file_path):
     # Implement loading real dataset logic here
-    return None
+    data_dir = './dataset/'
+    data_fname = data_dir + file_path
+    a = mmread(data_fname)
+    return nx.Graph(a)
 
 def random_W(n, rho):
     return initialize_W(n, rho)
@@ -49,13 +53,14 @@ def select_model_or_dataset(datasource, FJ_maxiters=10, *args, **kwargs):
 def selfadj_finiteFJmodelW(G, FJ_maxiters=10):
     A = nx.adjacency_matrix(G).toarray()
     FJ_iters=0
+    W=None
     
-    for i in range(1,FJ_maxiters+1):
+    for i in range(0,FJ_maxiters+1):
         W_ = construct_tstepFJmodelW_from_graph(t=i, W=A)
         sparsity = np.sum(W_==0)/W_.size
         print(i, sparsity)
             # if sparsity > int(math.sqrt(n)) + 1:
-        if sparsity > 0.1 and sparsity < 0.95:
+        if sparsity > 0.1:
             W = W_
             FJ_iters = i
         else: 
