@@ -49,6 +49,35 @@ def initialize_y(n, k, p):
 
     return y
 
+def initialize_y_with_randomP(n, k, p=None):
+    """
+    Initialize an n x k binary {-1,+1} matrix y, where each row is a random vector 
+    sampled iid from a Bernoulli distribution with probability Pr(=1) 
+    sampled from some distribution, by default uniform distribution in [0,1].
+
+    :param n: Number of rows
+    :param k: Number of columns
+    :param p: Probability of 1 in the Bernoulli distribution
+    :return: Randomly generated binary matrix y
+    """
+    if p is None:
+        p = np.random.uniform(size=n)
+
+    # Initialize the matrix
+    Y = np.zeros((n, k))
+
+    for i in range(n):
+        # Sample p_i for each row from a uniform distribution [0,1]
+        # p_i = np.random.uniform()
+
+        # Generate the i-th row with entries sampled from a Bernoulli distribution
+        # with probability p_i, and then map 0s to -1s and 1s to +1s
+        Y[i, :] = 2 * np.random.binomial(1, p[i], k) - 1
+
+    return Y
+
+
+
 
 def calculate_objective(Z, W, Y, S):
     # objective_value = 0
