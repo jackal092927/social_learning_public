@@ -42,6 +42,7 @@ def main():
     FJ_iters = 0
 
     datasrc = None
+    file_path = ""
 
     G=None
 
@@ -59,7 +60,8 @@ def main():
 
     # real data
     datasrc = "real_dataset"
-    file_path = 'delaunay_n10.mtx'
+    data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
+    file_path = 'polblogs.mtx'
     W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
     n = W.shape[0]
@@ -78,6 +80,7 @@ def main():
     # Meta information
     meta_info = f"""
     DataSource: {datasrc}
+    DataFile: {file_path}
     Random W: {randomW}
     #nodes: {Z.shape[0]}
     #articles: {Z.shape[1]}
@@ -105,7 +108,7 @@ def main():
     plt.plot(t_values, objective_random, label='Random Picking', marker='o')
     plt.xlabel('t (Subset Size)')
     plt.ylabel('Objective Value')
-    plt.title('Comparison of Greedy Algorithm and Random Picking on ' + datasrc)
+    plt.title(f'Comparison of Greedy Algorithm and Random Picking on {datasrc}: {file_path}')
     # plt.legend()
     # plt.grid(True)
     # plt.show()
@@ -124,7 +127,7 @@ def main():
     timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
 
     dir_str = "./output/"
-    fstr = f"FJ3model_DataSrc_{datasrc}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
+    fstr = f"FJ3model_DataSrc_{datasrc}_{file_path}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
 
 
     if save_plot:
@@ -134,6 +137,7 @@ def main():
 
     results_topkl = {
         "graph": datasrc,
+        "filename": file_path,
         "matrixW": W, 
         "random_seed": SEED,
         "nodesize_n": n,
