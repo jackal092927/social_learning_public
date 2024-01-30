@@ -29,6 +29,7 @@ def initialize_W(n, rho, normalize=True):
         
     if normalize:
         row_sums = W.sum(axis=1, keepdims=True)
+        row_sums[row_sums==0]=1e-10
         W = W / row_sums
 
     return W
@@ -598,7 +599,7 @@ def experiment5(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
         objective_random.append(acc)
     max_iterations = t
     print("max_iteration:\t",max_iterations)
-    print("objective_random", objective_random)
+    print("objective_random:", [ f"{val:.2f}" for val in objective_random])
 
     objective_greedy_appro = []
     greedy_selection_appro = approximate_greedy_approximation_opt(W, Y, max_iter=max_iterations)
@@ -614,7 +615,7 @@ def experiment5(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
         val = np.mean([calculate_objective(Z, W, Y, S[:t+1]) / m for S in greedy_selection_appro_extns])
         # objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
         objective_greedy_appro.append(val)  
-    print("objective_greedy_appro:", objective_greedy_appro)
+    print("objective_greedy_appro:", [ f"{val:.2f}" for val in objective_greedy_appro])
 
     objective_greedy = []
     greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
@@ -622,7 +623,7 @@ def experiment5(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
         objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
         objective_greedy.append(objective_value)
     print("objective_greedy size:", len(greedy_selection))
-    print("objective_greedy:", objective_greedy)
+    print("objective_greedy:", [ f"{val:.2f}" for val in objective_greedy])
 
     return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
         
