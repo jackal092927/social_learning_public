@@ -50,7 +50,7 @@ def initialize_y(n, k, p):
 
     return y
 
-def initialize_y_with_randomP(n, k, p=None):
+def initialize_y_with_randomP(n, k, p=None, range=(0.5, 1.)):
     """
     Initialize an n x k binary {-1,+1} matrix y, where each row is a random vector 
     sampled iid from a Bernoulli distribution with probability Pr(=1) 
@@ -62,7 +62,7 @@ def initialize_y_with_randomP(n, k, p=None):
     :return: Randomly generated binary matrix y
     """
     if p is None:
-        p = np.random.uniform(size=n)
+        p = np.random.uniform(low=range[0], high=range[1], size=n)
 
     # Initialize the matrix
     Y = np.zeros((n, k))

@@ -31,9 +31,10 @@ def main():
     p = 0.6 # Probability for 1 in y
 
     randomW = True
-    save_plot = False
-    save_results = False
+    save_plot = True
+    save_results = True
     FJ_maxiters = 5
+    repeatk = 5
     FJ_iters = 0
     d=10
 
@@ -70,7 +71,7 @@ def main():
         # real data
         datasrc = "real_dataset"
         data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
-        file_path = 'chesapeake.mtx'
+        file_path = 'polblogs.mtx'
         W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
         randomW = (datasrc == "random_W")
@@ -106,7 +107,7 @@ def main():
         # total_iterations = 2 * int(math.sqrt(n)) + 1
 
         max_total_iterations = 0
-        results, total_iterations =  experiment5(n, W, Y, Z, m=m, max_iterations=max_iterations, early_stop=early_stop, repeatk=3)
+        results, total_iterations =  experiment5(n, W, Y, Z, m=m, max_iterations=max_iterations, early_stop=early_stop, repeatk=repeatk)
         # print(results)
         objective_greedy, objective_greedy_appro, objective_random = results
         # print(len(objective_greedy))
