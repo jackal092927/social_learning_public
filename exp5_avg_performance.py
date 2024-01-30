@@ -25,7 +25,7 @@ from data_loader import *
 
 
 def main():
-    n = 256
+    n = 1024
     k = 10
     rho = 0.1  # ratio of nonzeros in W
     p = 0.6 # Probability for 1 in y
@@ -47,7 +47,7 @@ def main():
     G=None
 
     # SEED=3
-    repeat_exp = 3
+    repeat_exp = 1
     objective_greedys, objective_greedy_appros, objective_randoms = np.ones([repeat_exp, n]), np.ones([repeat_exp, n]), np.ones([repeat_exp, n])
     for i in range(repeat_exp):
         SEED = i
@@ -64,14 +64,14 @@ def main():
         # datasrc = "watts_strogatz"
         # W = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
 
-        datasrc = "random_W"
-        W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
+        # datasrc = "random_W"
+        # W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
         # real data
-        # datasrc = "real_dataset"
-        # data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
-        # file_path = 'polblogs.mtx'
-        # W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
+        datasrc = "real_dataset"
+        data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
+        file_path = 'chesapeake.mtx'
+        W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
         randomW = (datasrc == "random_W")
 
@@ -117,6 +117,7 @@ def main():
         objective_randoms[i,:total_iterations]=np.array(objective_random)
         if total_iterations > max_total_iterations:
             max_total_iterations = total_iterations
+
 
     objective_greedy = np.mean(objective_greedys, axis=0)
     objective_greedy_appro = np.mean(objective_greedy_appros, axis=0)
@@ -171,7 +172,7 @@ def main():
     timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
 
     dir_str = "./output/"
-    fstr = f"FJ3model_DataSrc_{datasrc}_{file_path}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
+    fstr = f"exp5_avg_performance_FixedOptModel_DataSrc_{datasrc}_{file_path}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_CountZNeg{m/Z.size}"
 
 
     if save_plot:
