@@ -25,9 +25,9 @@ from data_loader import *
 
 
 def main():
-    n = 1024
+    n = 1000
     k = 10
-    rho = 0.1  # ratio of nonzeros in W
+    rho = 0.01  # ratio of nonzeros in W
     p = 0.6 # Probability for 1 in y
 
     randomW = True
@@ -48,7 +48,7 @@ def main():
     G=None
 
     # SEED=3
-    repeat_exp = 1
+    repeat_exp = 5
     objective_greedys, objective_greedy_appros, objective_randoms = np.ones([repeat_exp, n]), np.ones([repeat_exp, n]), np.ones([repeat_exp, n])
     for i in range(repeat_exp):
         SEED = i
@@ -65,20 +65,20 @@ def main():
         # datasrc = "watts_strogatz"
         # W = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
 
-        # datasrc = "random_W"
-        # W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
+        datasrc = "random_W"
+        W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
         # real data
-        datasrc = "real_dataset"
-        data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
-        file_path = 'polblogs.mtx'
-        W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
+        # datasrc = "real_dataset"
+        # data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
+        # file_path = 'chesapeake.mtx'
+        # W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
         randomW = (datasrc == "random_W")
 
         n = W.shape[0]
         # Y = initialize_y(n, k, p)
-        Y = initialize_y_with_randomP(n, k)
+        Y = initialize_y_with_randomP(n, k, r=(0.3, 1.))
         Z = W @ Y
         m = np.sum(Z < 0)
 
@@ -151,10 +151,10 @@ def main():
     plt.scatter([x_highlight, x_highlight, x_highlight], [y_greedy, y_greedy_appro, y_random], color='red')
 
     # Annotating the points
-    offset = 5/100.  # Adjust this offset to position your text
-    plt.text(x_highlight, y_greedy + offset, f'{y_greedy:.2f}', fontsize=9, ha='center')
-    plt.text(x_highlight, y_greedy_appro + offset, f'{y_greedy_appro:.2f}', fontsize=9, ha='center')
-    plt.text(x_highlight, y_random + offset, f'{y_random:.2f}', fontsize=9, ha='center')
+    offset = 3/100.  # Adjust this offset to position your text
+    plt.text(x_highlight, y_greedy + offset, f'{y_greedy:.2f}', fontsize=13, ha='center')
+    plt.text(x_highlight, y_greedy_appro + offset, f'{y_greedy_appro:.2f}', fontsize=13, ha='center')
+    plt.text(x_highlight, y_random + offset, f'{y_random:.2f}', fontsize=13, ha='center')
 
 
     plt.xlabel('t (Subset Size)')
