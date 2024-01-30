@@ -7,6 +7,7 @@ plt.rcParams['savefig.format'] = 'pdf'
 from scipy.io import mmread
 import pickle
 import networkx as nx
+import math
 
 
 
@@ -73,6 +74,10 @@ def initialize_y_with_randomP(n, k, p=None):
         # Generate the i-th row with entries sampled from a Bernoulli distribution
         # with probability p_i, and then map 0s to -1s and 1s to +1s
         Y[i, :] = 2 * np.random.binomial(1, p[i], k) - 1
+    
+    # print(Y.shape)
+    # print(np.sum(Y==1, axis=1)/(Y.shape[1]))
+    # print(np.sum(Y==1, axis=0)/(Y.shape[0]))
 
     return Y
 
@@ -94,7 +99,8 @@ def calculate_objective(Z, W, Y, S):
 
     for i in range(n):
         for a in range(k):
-            condition1 = np.dot(W[i, :], Y[:, a]) < 0
+            # condition1 = np.dot(W[i, :], Y[:, a]) < 0
+            condition1 = Z[i,a]< 0
 
             condition2 = any((Y[t, a] < 0 and W[i, t] > 0) for t in S)
 
@@ -136,12 +142,61 @@ def approximate_marginal_gain(Z, W, Y, S, t):
     if k >= 2:
         Y=np.mean(Y<0, axis=1, keepdims=True)
     total_sum = 0.
+    idx = []
+    vals = []
 
     # E = W @ (1-2*Y)
     for i in range(n):
         sum1 = np.sum([ W[i,j] for j in S])
-        sum2 = np.sum( [ W[i,j] * (1. - 2.*Y[j,0] )- W[i,t]  for j in range(n) if j not in S and j != t ] ) 
+        # print(sum1)
+        sum2 = np.sum( [ W[i,j] * (1. - 2.*Y[j,0] )- W[i,t] for j in range(n) if j not in S and j != t ] ) 
+        # print(sum2)
         phi = sum1 + sum2
+        # print(phi)
+        # sum2 = np.sum( [ W[i,j] * (1. - 2.*Y[j,0] ) for j in range(n) if j not in S and j != t ] ) 
+        # phi = sum1 + sum2 - W[i,t] 
+
+        # [0.] [0.14303235] [-0.00993206] [0.01655343]
+        if phi >= 0: # phi[14]=-4.068159193049652
+            continue
+        
+        # idx.append(i)
+        # vals.append(phi)
+        pi = 1.
+        for j in S:
+            if W[i,j] == 0:
+                continue
+            # pi = pi * 1. - Y[j,0]
+            pi = pi * (1. - Y[j,0])
+
+        # total_sum += pi * Y[i,0]
+        total_sum += pi * Y[t,0]
+
+        
+            # # condition1 = np.dot(W[i, :], Y[:, a]) < 0
+            # condition1 = Z[i, a] < 0
+            # condition2 = W[i, t] > 0 and Y[t, a] < 0
+            # condition3 = all(( W[i, s] == 0 or Y[s, a] > 0) for s in S)
+
+            # if condition1 and condition2 and condition3:
+            #     total_sum += 1
+    # print(total_sum)
+    # print(idx)
+    # print(vals)
+    return total_sum
+
+def approximate_marginal_gain_opt(Z, W, Y, S, t):
+
+    n, k = Y.shape
+    if k >= 2:
+        Y=np.mean(Y<0, axis=1, keepdims=True)
+    total_sum = 0.
+
+    # E = W @ (1-2*Y)
+    for i in range(n):
+        sum1 = np.sum([ W[i,j] for j in S])
+        sum2 = np.sum( [ W[i,j] * (1. - 2.*Y[j,0] ) for j in range(n) if j not in S and j != t ] ) 
+        phi = sum1 + sum2 - W[i,t] 
         # if i==0:
         #     if phi >= 0:
         #         print(sum1, sum2, phi)
@@ -155,6 +210,7 @@ def approximate_marginal_gain(Z, W, Y, S, t):
             pi = pi * 1. - Y[j,0]
 
         total_sum += pi * Y[i,0]
+
         
             # # condition1 = np.dot(W[i, :], Y[:, a]) < 0
             # condition1 = Z[i, a] < 0
@@ -163,7 +219,7 @@ def approximate_marginal_gain(Z, W, Y, S, t):
 
             # if condition1 and condition2 and condition3:
             #     total_sum += 1
-
+    print(total_sum)
     return total_sum
 
 def approximate_greedy_approximation(W, Y, max_iter=100):
@@ -226,6 +282,92 @@ def approximate_greedy_approximation(W, Y, max_iter=100):
 
     return S_list
 
+def approximate_greedy_approximation_opt(W, Y, max_iter=100):
+    if Y.shape[1] >= 2:
+        Y = np.mean(Y<0, axis=1, keepdims=True)
+    # print(Y.shape)
+    Z = W @ Y
+    n = W.shape[0]
+    S = set()
+    S_list = []
+    best_increase = 0
+    selected_i = None
+    gain_zero = False
+
+    WE = W @ (1-2*Y)
+    # print("WE.shape:", WE.shape)
+    WS = np.zeros([n,1])
+    # WE_S = np.sum(WE, axis=1, keepdims=True)
+    # WE_S = 
+    EW = (np.ones([n,1])@((1-Y).T) * (W!=0))+(W==0)
+    W2Y = W * (np.ones([n,1])@((1-2*Y).T))
+    # print("EW.shape:", EW.shape)
+    # assert ((EW==1)==(W==0)).all(), "EW error"  
+    E_S = np.ones([n,1])
+    flag = WS + WE
+    flags =[]
+
+    for t in range(max_iter):
+        best_increase = 0
+        selected_i = None
+
+        for i in range(n):
+            if i in S:
+                continue
+            if gain_zero:
+                if selected_i is None:
+                    selected_i = i
+                    S.add(i)
+                    S_list.append(i)
+                break   
+            
+
+            # T1 = WS[i]
+            # T2 = WE_S[i] 
+            # T3 = E_S[i]
+
+            # flag = WS + WE - W2Y[:, i:i+1] - (n-t-1)*W[:,i:i+1]  # in fact this performs better
+            flag = WS + WE - W2Y[:, i:i+1] - W[:,i:i+1]
+            # print(WS[14], WE_S[14], W2Y[14, i:i+1], W[14,i:i+1])
+            gain = np.sum((flag < 0) * E_S * Y[i,0], axis=0)[0]
+            # idx = np.where(flag<0)
+            # [ 14,  16,  26,  29,  32,  50,  58,  60,  71,  83,  86,  87,  92,
+            # 98, 117, 142, 143, 145, 146, 170, 185, 190, 191, 194, 208, 216, 219, 231, 243, 251, 254]
+            # print(idx)
+            # if flag > 0:
+            #     continue
+            # gain_opt = Y[t,0] * E_S[i]
+
+            # gain = approximate_marginal_gain(Z, W, Y, S, i)
+            # [14, 16, 26, 29, 32, 50, 58, 60, 71, 83, 86, 87, 92, 
+            # 98, 117, 142, 143, 145, 146, 170, 185, 190, 191, 194, 208, 216, 219, 231, 243, 251, 254]
+
+            # assert math.isclose(gain, gain_opt, rel_tol=0.15), f"gain error: it={t}, i={i}, gain={gain}, gain_opt={gain_opt}"
+            if gain > best_increase:
+                best_increase = gain
+                selected_i = i
+        
+        # if best_increase == 0:
+        #     print("Iteration:", t, "\t gain==0")
+
+        if selected_i is not None:
+            S.add(selected_i)
+            S_list.append(selected_i)
+            # print("Selected element:", selected_i, "with marginal gain:", best_increase)
+        else:
+            gain_zero = True
+            print("Iteration:", t, "\t gain==0")
+            # break  # Break if no improvement
+            break
+        
+        WS += W[:, selected_i:selected_i+1]
+        WE -= - W2Y[:, selected_i:selected_i+1]
+        E_S = E_S * EW[:, selected_i:selected_i+1]
+
+
+
+    return S_list
+
 def greedy_approximation(W, Y, max_iter=10):
     Z = W @ Y
     n = W.shape[0]
@@ -262,7 +404,8 @@ def greedy_approximation(W, Y, max_iter=10):
             # print("Selected element:", selected_i, "with marginal gain:", best_increase)
         else:
             break  # Break if no improvement
-
+    
+    assert len(S_list) == len(S), "Error: S_list and S have different lengths"
     return S_list
 
 
@@ -369,13 +512,131 @@ def experiment1(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, pl
     if max_iterations == -1:
         max_iterations = n
 
-    def generate_permutations(T, k=5):
-        permutations = []
-        for _ in range(k):
-            # perm = random.shuffle(T)
-            perm = np.random.permutation(T)
-            permutations.append(perm)
-        return permutations
+    # def generate_permutations(T, k=5):
+    #     permutations = []
+    #     for _ in range(k):
+    #         # perm = random.shuffle(T)
+    #         perm = np.random.permutation(T)
+    #         permutations.append(perm)
+    #     return permutations
+
+    objective_random = []
+    random_seqs = generate_permutations(range(n), k=repeatk)
+    t=0
+    acc = 0.
+    epsilon = 1e-10
+    while t < max_iterations and acc <= early_stop - epsilon:
+        acc = np.mean([calculate_objective(Z, W, Y, seqs[:t+1]) / m for seqs in random_seqs])
+        t += 1
+        objective_random.append(acc)
+    max_iterations = t
+    print("max_iteration:\t",max_iterations)
+    print("objective_random", objective_random)
+
+    objective_greedy = []
+    greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
+    for t in range(max_iterations):
+        objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
+        objective_greedy.append(objective_value)
+    print("objective_greedy size:", len(greedy_selection))
+    print("objective_greedy:", objective_greedy)
+    
+    objective_greedy_appro = []
+    greedy_selection_appro = approximate_greedy_approximation(W, Y, max_iter=max_iterations)
+    print("greedy_selection_appro size:", len(greedy_selection_appro))
+    greedy_selection_appro_extns = []
+    # t = len(greedy_selection_appro)
+    if len(greedy_selection_appro) < max_iterations:
+        T = list(set(range(n)) - set(greedy_selection_appro))
+        perms = generate_permutations(T, k=repeatk)
+        for i in range(repeatk):
+            greedy_selection_appro_extns.append(greedy_selection_appro + list(perms[i]) )
+    for t in range(max_iterations):
+        val = np.mean([calculate_objective(Z, W, Y, S[:t+1]) / m for S in greedy_selection_appro_extns])
+        # objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
+        objective_greedy_appro.append(val)  
+    print("objective_greedy_appro:", objective_greedy_appro)
+
+    return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
+        
+
+        
+def generate_permutations(T, k=5):
+    permutations = []
+    for _ in range(k):
+        # perm = random.shuffle(T)
+        perm = np.random.permutation(T)
+        permutations.append(perm)
+    return permutations
+
+
+def experiment5(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, plot=False):
+
+    if m==0:
+        pass # TODO: compute m from Z
+
+    if max_iterations == -1:
+        max_iterations = n
+
+    # def generate_permutations(T, k=5):
+    #     permutations = []
+    #     for _ in range(k):
+    #         # perm = random.shuffle(T)
+    #         perm = np.random.permutation(T)
+    #         permutations.append(perm) 
+    #     return permutations
+        
+
+    objective_random = []
+    random_seqs = generate_permutations(range(n), k=repeatk)
+    t=0
+    acc = 0.
+    epsilon = 1e-10
+    while t < max_iterations and acc <= early_stop - epsilon:
+        acc = np.mean([calculate_objective(Z, W, Y, seqs[:t+1]) / m for seqs in random_seqs])
+        t += 1
+        objective_random.append(acc)
+    max_iterations = t
+    print("max_iteration:\t",max_iterations)
+    print("objective_random", objective_random)
+
+    objective_greedy_appro = []
+    greedy_selection_appro = approximate_greedy_approximation_opt(W, Y, max_iter=max_iterations)
+    print("greedy_selection_appro size:", len(greedy_selection_appro))
+    greedy_selection_appro_extns = [greedy_selection_appro for _ in range(repeatk)]
+    # t = len(greedy_selection_appro)
+    if len(greedy_selection_appro) < max_iterations:
+        T = list(set(range(n)) - set(greedy_selection_appro))
+        perms = generate_permutations(T, k=repeatk)
+        for i in range(repeatk):
+            greedy_selection_appro_extns[i] = greedy_selection_appro_extns[i]+ list(perms[i])
+    for t in range(max_iterations):
+        val = np.mean([calculate_objective(Z, W, Y, S[:t+1]) / m for S in greedy_selection_appro_extns])
+        # objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
+        objective_greedy_appro.append(val)  
+    print("objective_greedy_appro:", objective_greedy_appro)
+
+    objective_greedy = []
+    greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
+    for t in range(max_iterations):
+        objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
+        objective_greedy.append(objective_value)
+    print("objective_greedy size:", len(greedy_selection))
+    print("objective_greedy:", objective_greedy)
+
+    return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
+        
+
+
+def experiment6(n, W, Y, Z, m=0, max_iterations=-1, early_stop=.99, repeatk=5, plot=False):
+
+    if m==0:
+        pass # TODO: compute m from Z
+
+    if max_iterations == -1:
+        max_iterations = n
+
+
 
     objective_random = []
     random_seqs = generate_permutations(range(n), k=repeatk)

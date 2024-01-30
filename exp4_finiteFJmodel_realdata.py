@@ -25,19 +25,19 @@ from data_loader import *
 
 
 def main():
-    SEED=13
+    SEED=101
     random.seed(SEED)
     np.random.seed(SEED)
     
 
     n = 1000
-    k = 100
+    k = 5
     rho = 0.1  # ratio of nonzeros in W
     p = 0.75 # Probability for 1 in y
 
     randomW = False
-    save_plot = True
-    save_results = True
+    save_plot = False
+    save_results = False
     FJ_maxiters = 5
     FJ_iters = 0
 
@@ -46,26 +46,27 @@ def main():
 
     G=None
 
-    # datasrc = "erdos_renyi"
-    # G = select_model_or_dataset(datasource=datasrc, n=n, p=10./n, seed=SEED, directed=False)
+    datasrc = "erdos_renyi"
+    W = select_model_or_dataset(datasource=datasrc, n=n, p=n/100., seed=SEED, directed=False)
 
     # datasrc = "barabasi_albert"
-    # G = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
+    # W = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
 
     # datasrc = "watts_strogatz"
-    # G = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
+    # W = select_model_or_dataset(datasrc, n=n, k=5, p=0.25)
 
     # datasrc = "random_W"
     # W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
     # real data
-    datasrc = "real_dataset"
-    data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
-    file_path = 'polblogs.mtx'
-    W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
+    # datasrc = "real_dataset"
+    # data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
+    # file_path = 'polblogs.mtx'
+    # W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
 
     n = W.shape[0]
-    Y = initialize_y(n, k, p)
+    # Y = initialize_y(n, k, p)
+    Y = initialize_y_with_randomP(n, k)
     Z = W @ Y
     m = np.sum(Z < 0)
 
@@ -133,7 +134,7 @@ def main():
     if save_plot:
         plot_fstr = f"{dir_str}plot_{fstr}_{timestamp}.pdf"        
         plt.savefig(plot_fstr, format='pdf')
-    print("Save to ==> ", plot_fstr)
+        print("Save to ==> ", plot_fstr)
 
     results_topkl = {
         "graph": datasrc,
@@ -155,10 +156,10 @@ def main():
         result_fstr = f"{dir_str}result_{fstr}_{timestamp}.pkl"
         with open(result_fstr, "wb") as file:
             pickle.dump(results_topkl, file)
+        print("Save to ==> ", result_fstr)
     
     
 
-    print("Save to ==> ", result_fstr)
 
 
 

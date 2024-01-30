@@ -26,9 +26,9 @@ from data_loader import *
 
 def main():
     n = 256
-    k = 2
+    k = 10
     rho = 0.1  # ratio of nonzeros in W
-    p = 0.65 # Probability for 1 in y
+    p = 0.6 # Probability for 1 in y
 
     randomW = True
     save_plot = False
@@ -55,7 +55,7 @@ def main():
         np.random.seed(SEED)
         
 
-        # datasrc = "erdos_renyai"
+        # datasrc = "erdos_renyi"
         # W = select_model_or_dataset(datasource=datasrc, n=n, p=0.01, seed=SEED, directed=False)
 
         # datasrc = "barabasi_albert"
@@ -76,8 +76,8 @@ def main():
         randomW = (datasrc == "random_W")
 
         n = W.shape[0]
-        Y = initialize_y(n, k, p)
-        # Y = initialize_y_with_randomP(n, k)
+        # Y = initialize_y(n, k, p)
+        Y = initialize_y_with_randomP(n, k)
         Z = W @ Y
         m = np.sum(Z < 0)
 
@@ -106,7 +106,7 @@ def main():
         # total_iterations = 2 * int(math.sqrt(n)) + 1
 
         max_total_iterations = 0
-        results, total_iterations =  experiment1(n, W, Y, Z, m=m, max_iterations=max_iterations, early_stop=early_stop, repeatk=3)
+        results, total_iterations =  experiment5(n, W, Y, Z, m=m, max_iterations=max_iterations, early_stop=early_stop, repeatk=3)
         # print(results)
         objective_greedy, objective_greedy_appro, objective_random = results
         # print(len(objective_greedy))
@@ -122,7 +122,7 @@ def main():
     objective_greedy_appro = np.mean(objective_greedy_appros, axis=0)
     objective_random = np.mean(objective_randoms, axis=0)
     print(max_total_iterations)
-    print(f"cover ratio @ step {d}:\t", f"{objective_greedy[d]:.2f}", f"{objective_greedy_appro[d]:.2f}", f"{objective_random[d]:.2f}")
+    print(f"cover ratio @ step {d}:\t", f"{objective_greedy[d-1]:.2f}", f"{objective_greedy_appro[d-1]:.2f}", f"{objective_random[d-1]:.2f}")
 
 
 
@@ -134,7 +134,7 @@ def main():
     plt.plot(t_values, objective_random[:max_total_iterations], label='Random Picking', marker='o')
 
 
-    x_highlight = 10
+    x_highlight = d
     y_greedy = objective_greedy[x_highlight - 1]  # Adjusting index for 0-based indexing
     y_greedy_appro = objective_greedy_appro[x_highlight - 1]
     y_random = objective_random[x_highlight - 1]
