@@ -118,11 +118,17 @@ def main():
         if total_iterations > max_total_iterations:
             max_total_iterations = total_iterations
 
+    step99s = []
+    step99s.append(np.mean(np.sum(objective_greedys<=0.99, axis=1), axis=0))
+    step99s.append(np.mean(np.sum(objective_greedy_appros<=0.99, axis=1), axis=0))
+    step99s.append(np.mean(np.sum(objective_randoms<=0.99, axis=1), axis=0))   
+
     objective_greedy = np.mean(objective_greedys, axis=0)
     objective_greedy_appro = np.mean(objective_greedy_appros, axis=0)
     objective_random = np.mean(objective_randoms, axis=0)
     print(max_total_iterations)
     print(f"cover ratio @ step {d}:\t", f"{objective_greedy[d-1]:.2f}", f"{objective_greedy_appro[d-1]:.2f}", f"{objective_random[d-1]:.2f}")
+    print(f"step99s:\t", step99s)
 
 
 
