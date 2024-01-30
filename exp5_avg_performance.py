@@ -129,6 +129,8 @@ def main():
     print(max_total_iterations)
     print(f"cover ratio @ step {d}:\t", f"{objective_greedy[d-1]:.2f}", f"{objective_greedy_appro[d-1]:.2f}", f"{objective_random[d-1]:.2f}")
     print(f"step99s:\t", step99s)
+    print(f"step99s:\t", step99s)
+
 
 
     # Plotting
