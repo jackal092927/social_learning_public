@@ -25,9 +25,9 @@ from data_loader import *
 
 
 def main():
-    n = 256
+    n = 1024
     k = 10
-    rho = 0.02  # ratio of nonzeros in W
+    rho = 0.05  # ratio of nonzeros in W
     p = 0.6 # Probability for 1 in y
 
     randomW = True
