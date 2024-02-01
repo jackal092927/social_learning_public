@@ -32,13 +32,13 @@ def main():
     p = 0.6 # Probability for 1 in y
     p_low = 0.3
     p_high = 0.9
-    r=(p_low, p_high)
+    Prange=(p_low, p_high)
 
     randomW = True
     save_plot = True
     save_results = True
     FJ_maxiters = 3
-    repeatk = 5
+    repeatk = 3
     FJ_iters = 0
     d=10
 
@@ -52,7 +52,7 @@ def main():
     G=None
 
     # SEED=3
-    repeat_exp = 5
+    repeat_exp = 1
     objective_greedys, objective_greedy_appros, objective_randoms = np.ones([repeat_exp, n]), np.ones([repeat_exp, n]), np.ones([repeat_exp, n])
     for i in range(repeat_exp):
         SEED = i
@@ -66,23 +66,23 @@ def main():
         # datasrc = "barabasi_albert"
         # W = select_model_or_dataset(datasource=datasrc, n=n, m=5, seed=SEED)
 
-        datasrc = "watts_strogatz"
-        W = select_model_or_dataset(datasrc, n=n, k=5, p=0.25, FJ_maxiters=FJ_maxiters, seed=SEED)
+        # datasrc = "watts_strogatz"
+        # W = select_model_or_dataset(datasrc, n=n, k=5, p=0.25, FJ_maxiters=FJ_maxiters, seed=SEED)
 
         # datasrc = "random_W"
         # W = select_model_or_dataset(datasource=datasrc, n=n, rho=rho)
 
         # real data
-        # datasrc = "real_dataset"
-        # data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', 'delaunay_n11.mtx', 'delaunay_n12.mtx', 'delaunay_n13.mtx']
-        # file_path = 'chesapeake.mtx'
-        # W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path)
+        datasrc = "real_dataset"
+        data_filenames = ['chesapeake.mtx', 'bio-celegansneural.mtx', 'delaunay_n10.mtx', 'polblogs.mtx', "soc-wiki-Vote.mtx", "fb-pages-food.edges.edges", "soc-hamsterster.edges"]
+        file_path = 'soc-hamsterster.edges'
+        W = select_model_or_dataset(datasource=datasrc, FJ_maxiters=FJ_maxiters, file_path=file_path, delimiter=' ')
 
         randomW = (datasrc == "random_W")
 
         n = W.shape[0]
         # Y = initialize_y(n, k, p)
-        Y = initialize_y_with_randomP(n, k, r=r, seed=SEED)
+        Y = initialize_y_with_randomP(n, k, Prange=Prange, seed=SEED)
         Z = W @ Y
         m = np.sum(Z < 0)
         d = math.ceil(math.log2(n))
@@ -104,9 +104,11 @@ def main():
         #articles: {Z.shape[1]}
         W_Sparse: {np.sum(W==0)/(W.size)}
         Pr(y==1): {np.sum(Y==1)/(Y.size)}
-        P_range: {r}
+        P_range: {Prange}
         Count Z<0: {m}, {m/Z.size}
         FJ_iters: {FJ_iters}
+        repeat_exp: {repeat_exp}
+        repeatk: {repeatk}
         """
         print(meta_info)
 
@@ -182,7 +184,7 @@ def main():
     timestamp = current_datetime.strftime('%Y-%m-%d-%H-%M-%S')
 
     dir_str = "./output/"
-    fstr = f"{py_fname}_FixedOptModel_DataSrc_{datasrc}_{file_path}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_P_range={r}_CountZNeg{m/Z.size}"
+    fstr = f"{py_fname}_FixedOptModel_DataSrc_{datasrc}_{file_path}_RandomW{randomW}_Nodes{n}_Articles{Z.shape[1]}_Sparsity{np.sum(W==0)/(W.size)}_PrY1{np.sum(Y==1)/(Y.size)}_P_range={Prange}_CountZNeg{m/Z.size}"
 
 
     if save_plot:
@@ -204,6 +206,8 @@ def main():
         "total_iteration": total_iterations,
         "timestamp": timestamp,
         "FJ_iters": FJ_iters,
+        "repeat_exp": repeat_exp,
+        "repeatk": repeatk,
     }
 
     if save_results:

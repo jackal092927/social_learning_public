@@ -12,11 +12,14 @@ def watts_strogatz_graph(n=10, k=5, p=0.25, seed=0):
 def barabasi_albert_graph(n=10, m=5, seed=0):
     return nx.barabasi_albert_graph(n=n, m=m, seed=seed)
 
-def load_real_dataset(file_path):
-    # Implement loading real dataset logic here
+def load_real_dataset(file_path, delimiter=' '):
+    # Implement loading real dataset logic here    
     data_dir = './dataset/'
     data_fname = data_dir + file_path
-    a = mmread(data_fname)
+    if data_fname.endswith('edges'):
+        a = nx.read_edgelist(data_fname, delimiter=delimiter, comments="%")
+    elif data_fname.endswith('mtx'):
+        a = mmread(data_fname)
     return nx.Graph(a)
 
 def random_W(n, rho, seed=0):

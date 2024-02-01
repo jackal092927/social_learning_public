@@ -78,7 +78,7 @@ def main():
 
         n = W.shape[0]
         # Y = initialize_y(n, k, p)
-        Y = initialize_y_with_randomP(n, k, r=(0.3, 1.))
+        Y = initialize_y_with_randomP(n, k, Prange=(0.3, 1.))
         Z = W @ Y
         m = np.sum(Z < 0)
 
