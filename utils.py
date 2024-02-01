@@ -742,3 +742,61 @@ def experiment7(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=1, pl
 
     return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
         
+
+def plot_results(performance_metrics, dataset_names, title="Comparison of Iterations for Cover Ratio >= 70%", xlabel="Datasets", ylabel="Objective Value", savefig=f"./output/comparison.pdf"):    
+
+    # Data provided by the user
+    method_names = ["Greedy", "Approx", "Random"]
+    dataset_names = dataset_names
+    # metrics = [[1,2,3], [2,3,4], [3,4,5], [4,5,6]] 
+    metrics = performance_metrics
+    # Setting a lighter color for 'Greedy' method - 'sky blue'
+    colors = ['skyblue', 'orange', 'green']
+
+    # Number of datasets
+    n_datasets = len(dataset_names)
+    # Number of methods
+    n_methods = len(method_names)
+
+    # Create a 2D array from the metrics for easy manipulation
+    metrics_array = np.array(metrics)
+
+    # Setting the positions and width for the bars
+    pos = np.arange(n_datasets)
+    bar_width = 0.25
+
+    # Plotting
+    plt.figure(figsize=(10, 3))
+    # Double the font size for the plot elements
+    default_font_size = plt.rcParams['font.size']
+    new_font_size = default_font_size * 2 
+
+    # for i in range(n_methods):
+    #     plt.bar(pos + i * bar_width, metrics_array[:, i], bar_width, label=method_names[i], color=color)
+    for i, color in enumerate(colors):
+        bars = plt.bar(pos + i * bar_width, metrics_array[:, i], bar_width, label=method_names[i], color=color)
+        for bar in bars:
+            yval = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 2), ha='center', va='bottom', fontsize=13)
+
+
+
+    # Adding labels and title
+    plt.xlabel(xlabel, fontsize=15)
+    plt.ylabel(ylabel, fontsize=20)
+    plt.title(title, fontsize=18)
+    plt.xticks(pos + bar_width, dataset_names, fontsize=20)
+    plt.yticks(fontsize=20) 
+
+    # Adding a legend
+    plt.legend()
+
+    # Show the plot
+    plt.tight_layout()
+    if savefig is not None:
+        plot_fstr = f"./output/comparison.pdf"        
+        plt.savefig(plot_fstr, format='pdf')
+        print("Save to ==> ", plot_fstr)
+
+
+    plt.show()
