@@ -135,7 +135,7 @@ def main():
     print(f"cover ratio @ step {d}:\t", f"{objective_greedy[d-1]:.2f}", f"{objective_greedy_appro[d-1]:.2f}", f"{objective_random[d-1]:.2f}")
 
 
-
+    # dataset_names = ["ER", "PA", "WS", 'BIO', 'CSPK', 'FB', 'WIKI' ]
 
     # Plotting
     t_values = range(1, max_total_iterations + 1)
@@ -197,7 +197,7 @@ def main():
         "random_seed": SEED,
         "nodesize_n": n,
         "articlesize_k": k,
-        "sparsity_rho": rho,  # Sparsity factor for W
+        "sparsity_rho": {np.sum(W==0)/(W.size)},  # Sparsity factor for W
         "probability1": p,  # Probability for 1 in y
         "negative_size": m,
         "results": results,
