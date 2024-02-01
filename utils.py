@@ -11,7 +11,7 @@ import math
 
 
 
-def initialize_W(n, rho, normalize=True):
+def initialize_W(n, rho, normalize=True, seed=0):
     """
     Initialize a random nonnegative n x n matrix with sparsity controlled by rho.
 
@@ -19,6 +19,8 @@ def initialize_W(n, rho, normalize=True):
     :param rho: Sparsity factor (between 0 and 1), with rho=1 meaning a fully dense matrix
     :return: Randomly generated nonnegative matrix W
     """
+    np.random.seed(seed=seed)
+
     # Create a random matrix with values between 0 and 1
     W = np.random.rand(n, n)
 
@@ -51,7 +53,7 @@ def initialize_y(n, k, p):
 
     return y
 
-def initialize_y_with_randomP(n, k, p=None, r=(0.5, 1.)):
+def initialize_y_with_randomP(n, k, p=None, r=(0.5, 1.), seed=0):
     """
     Initialize an n x k binary {-1,+1} matrix y, where each row is a random vector 
     sampled iid from a Bernoulli distribution with probability Pr(=1) 
@@ -62,6 +64,7 @@ def initialize_y_with_randomP(n, k, p=None, r=(0.5, 1.)):
     :param p: Probability of 1 in the Bernoulli distribution
     :return: Randomly generated binary matrix y
     """
+    np.random.seed(seed=seed)
     if p is None:
         p = np.random.uniform(low=r[0], high=r[1], size=n)
 
@@ -682,3 +685,60 @@ def experiment6(n, W, Y, Z, m=0, max_iterations=-1, early_stop=.99, repeatk=5, p
 
 
 
+def experiment7(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=1, plot=False):
+
+    if m==0:
+        pass # TODO: compute m from Z
+
+    if max_iterations == -1:
+        max_iterations = n
+
+    # def generate_permutations(T, k=5):
+    #     permutations = []
+    #     for _ in range(k):
+    #         # perm = random.shuffle(T)
+    #         perm = np.random.permutation(T)
+    #         permutations.append(perm) 
+    #     return permutations
+        
+
+    objective_random = []
+    random_seqs = generate_permutations(range(n), k=repeatk)
+    t=0
+    acc = 0.
+    epsilon = 1e-10
+    while t < max_iterations and acc <= early_stop - epsilon:
+        acc = np.mean([calculate_objective(Z, W, Y, seqs[:t+1]) / m for seqs in random_seqs])
+        t += 1
+        objective_random.append(acc)
+    max_iterations = t
+    print("max_iteration:\t",max_iterations)
+    print("objective_random:"+ ", ".join([ f"{val:.2f}" for val in objective_random]))
+
+    objective_greedy_appro = []
+    greedy_selection_appro = approximate_greedy_approximation_opt(W, Y, max_iter=max_iterations)
+    print("greedy_selection_appro size:", len(greedy_selection_appro))
+    greedy_selection_appro_extns = [greedy_selection_appro for _ in range(repeatk)]
+    # t = len(greedy_selection_appro)
+    if len(greedy_selection_appro) < max_iterations:
+        T = list(set(range(n)) - set(greedy_selection_appro))
+        perms = generate_permutations(T, k=repeatk)
+        for i in range(repeatk):
+            greedy_selection_appro_extns[i] = greedy_selection_appro_extns[i]+ list(perms[i])
+    for t in range(max_iterations):
+        val = np.mean([calculate_objective(Z, W, Y, S[:t+1]) / m for S in greedy_selection_appro_extns])
+        # objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
+        objective_greedy_appro.append(val)  
+    print("objective_greedy_appro: " + ", ".join([ f"{val:.2f}" for val in objective_greedy_appro]))
+    # print("objective_greedy_appro:", [ f"{val:.2f}" for val in objective_greedy_appro])
+
+    objective_greedy = []
+    greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
+    for t in range(max_iterations):
+        objective_value = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
+        objective_greedy.append(objective_value)
+    print("objective_greedy size:", len(greedy_selection))
+    print("objective_greedy: " + ", ".join([ f"{val:.2f}" for val in objective_greedy]))
+
+    return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
+        

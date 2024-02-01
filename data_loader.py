@@ -6,8 +6,8 @@ from scipy.io import mmread
 def erdos_renyi_graph(n=10, p=0.1, seed=0, directed=False):
     return nx.erdos_renyi_graph(n=n, p=p, seed=seed, directed=directed)
 
-def watts_strogatz_graph(n=10, k=5, p=0.25):
-    return nx.watts_strogatz_graph(n, k, p)
+def watts_strogatz_graph(n=10, k=5, p=0.25, seed=0):
+    return nx.watts_strogatz_graph(n, k, p, seed=seed)
 
 def barabasi_albert_graph(n=10, m=5, seed=0):
     return nx.barabasi_albert_graph(n=n, m=m, seed=seed)
@@ -19,8 +19,8 @@ def load_real_dataset(file_path):
     a = mmread(data_fname)
     return nx.Graph(a)
 
-def random_W(n, rho):
-    return initialize_W(n, rho)
+def random_W(n, rho, seed=0):
+    return initialize_W(n, rho, seed=seed)
 
 # Create a dictionary mapping keywords to functions or objects
 switch_dict = {
@@ -41,7 +41,7 @@ def select_model_or_dataset(datasource, FJ_maxiters=10, *args, **kwargs):
         return selected_function(*args, **kwargs)
     else:
         G = selected_function(*args, **kwargs)
-        W = selfadj_finiteFJmodelW(G, FJ_maxiters)
+        W = selfadj_finiteFJmodelW(G, FJ_maxiters=FJ_maxiters)
         return W
     
 
