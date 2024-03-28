@@ -46,10 +46,9 @@ def initialize_y(n, k, p):
     :param p: Probability of 1 in the Bernoulli distribution
     :return: Randomly generated binary matrix y
     """
-    # Create a binary matrix based on Bernoulli distribution
+    ### Create a binary {+1, -1} matrix based on Bernoulli distribution
     y_binary = np.random.binomial(1, p, (n, k))
-
-    y = 2 * y_binary - 1
+    y = 2 * y_binary - 1 ## {0,1} ==> {-1, +1}
 
     return y
 
@@ -574,6 +573,7 @@ def generate_permutations(T, k=5):
     return permutations
 
 
+
 def experiment5(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=5, plot=False):
 
     if m==0:
@@ -741,9 +741,197 @@ def experiment7(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=1, pl
     print("objective_greedy: " + ", ".join([ f"{val:.2f}" for val in objective_greedy]))
 
     return (objective_greedy, objective_greedy_appro, objective_random), max_iterations
-        
+
+
+
+def get_degree_seq(W, Y, Z):
+    W_sum = np.sum(W, axis=1)
+    # print(W_sum.shape)  ## shape=(n,)
+    W_sum = np.flip(np.argsort(W_sum))
+    seq = W_sum
+
+    return seq
+
+def get_error_seq(W, Y, Z):
+    Y_sum = np.sum(Y<0, axis=1)
+    # print(Y_sum.shape)  ## shape=(n,)
+    Y_sum = np.flip(np.argsort(Y_sum))
+    seq = Y_sum
+
+    return seq
+
+def get_degreeXerror_seq(W, Y, Z):
+    Y_sum = np.sum(Y<0, axis=1)
+    W_sum = np.sum(W, axis=1)
+    YW_sum = np.multiply(Y_sum, W_sum)
+    # print(W_sum.shape)  ## shape=(n,)
+    seq = np.flip(np.argsort(YW_sum)) ## descending order
+
+    return seq
+
+AlgorithmList = ["random", "degree", "error", "degreeXerror", "greedy_approx", "greedy"]
+AlgorithmCount=len(AlgorithmList)
+MASK = [1]*AlgorithmCount
+
+
+def experiment8(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=1, plot=False, mask=MASK):
+
+    if m==0:
+        pass # TODO: compute m from Z
+
+    if max_iterations == -1:
+        max_iterations = n
+
+
+
+    results = np.zeros([AlgorithmCount, max_iterations])
+
+    ### random selection baseline
+    objective_vals = []
+    algorithm_id = 0
+    if mask[algorithm_id]:
+        random_seqs = generate_permutations(range(n), k=repeatk)
+        t=0
+        acc = 0.
+        epsilon = 1e-10
+        while t < max_iterations and acc <= early_stop - epsilon:
+            acc = np.mean([calculate_objective(Z, W, Y, seqs[:t+1]) / m for seqs in random_seqs])
+            t += 1
+            objective_vals.append(acc)
+        max_iterations = t
+        print("objective_random:"+ ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results = results[:, :max_iterations]
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+    print("max_iteration:\t",max_iterations)
+
+    ### degree based selection baseline
+    objective_vals = []
+    if mask[algorithm_id]:
+        degree_selection = get_degree_seq(W, Y, Z)
+        for t in range(max_iterations):
+            objective_val = calculate_objective(Z, W, Y, degree_selection[:t+1]) / m
+            objective_vals.append(objective_val)
+        print("objective_degree:"+ ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+
+    ### error rate based selection baseline
+    objective_vals = []
+    if mask[algorithm_id]:
+        selection_seq = get_error_seq(W, Y, Z)
+        for t in range(max_iterations):
+            objective_val = calculate_objective(Z, W, Y, selection_seq[:t+1]) / m
+            objective_vals.append(objective_val)
+        print("objective_error:"+ ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+
+    ### degreeXerror based selection baseline
+    objective_vals = []
+    if mask[algorithm_id]:
+        selection_seq = get_degreeXerror_seq(W, Y, Z)
+        for t in range(max_iterations):
+            objective_val = calculate_objective(Z, W, Y, selection_seq[:t+1]) / m
+            objective_vals.append(objective_val)
+        print("objective_degreeXerror:"+ ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+
+    ### greedy approximation selection algorithm
+    objective_vals = []
+    if mask[algorithm_id]:
+        greedy_selection_appro = approximate_greedy_approximation_opt(W, Y, max_iter=max_iterations)
+        print("greedy_selection_appro size:", len(greedy_selection_appro))
+        greedy_selection_appro_extns = [greedy_selection_appro for _ in range(repeatk)]
+        # t = len(greedy_selection_appro)
+        if len(greedy_selection_appro) < max_iterations:
+            T = list(set(range(n)) - set(greedy_selection_appro))
+            perms = generate_permutations(T, k=repeatk)
+            for i in range(repeatk):
+                greedy_selection_appro_extns[i] = greedy_selection_appro_extns[i]+ list(perms[i])
+        for t in range(max_iterations):
+            val = np.mean([calculate_objective(Z, W, Y, S[:t+1]) / m for S in greedy_selection_appro_extns])
+            # objective_value = calculate_objective(Z, W, Y, greedy_selection_appro[:t+1]) / m
+            objective_vals.append(val)  
+        print("objective_greedy_appro: " + ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+
+    ### greedy selection algorithm
+    objective_vals = []
+    if mask[algorithm_id]:
+        greedy_selection = greedy_approximation(W, Y, max_iter=max_iterations)
+        for t in range(max_iterations):
+            objective_val = calculate_objective(Z, W, Y, greedy_selection[:t+1]) / m
+            objective_vals.append(objective_val)
+        print("objective_greedy size:", len(greedy_selection))
+        print("objective_greedy: " + ", ".join([ f"{val:.2f}" for val in objective_vals]))
+        results[algorithm_id] = np.array(objective_vals)
+    algorithm_id += 1
+
+    return results, max_iterations
 
 def plot_results(performance_metrics, dataset_names, title="Comparison of Iterations for Cover Ratio >= 70%", xlabel="Datasets", ylabel="Objective Value", savefig=f"./output/comparison.pdf"):    
+
+    # Data provided by the user
+    method_names = ["Greedy", "Approx", "Random"]
+    dataset_names = dataset_names
+    # metrics = [[1,2,3], [2,3,4], [3,4,5], [4,5,6]] 
+    metrics = performance_metrics
+    # Setting a lighter color for 'Greedy' method - 'sky blue'
+    colors = ['skyblue', 'orange', 'green']
+
+    # Number of datasets
+    n_datasets = len(dataset_names)
+    # Number of methods
+    n_methods = len(method_names)
+
+    # Create a 2D array from the metrics for easy manipulation
+    metrics_array = np.array(metrics)
+
+    # Setting the positions and width for the bars
+    pos = np.arange(n_datasets)
+    bar_width = 0.25
+
+    # Plotting
+    plt.figure(figsize=(10, 3))
+    # Double the font size for the plot elements
+    default_font_size = plt.rcParams['font.size']
+    new_font_size = default_font_size * 2 
+
+    # for i in range(n_methods):
+    #     plt.bar(pos + i * bar_width, metrics_array[:, i], bar_width, label=method_names[i], color=color)
+    for i, color in enumerate(colors):
+        bars = plt.bar(pos + i * bar_width, metrics_array[:, i], bar_width, label=method_names[i], color=color)
+        for bar in bars:
+            yval = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 2), ha='center', va='bottom', fontsize=13)
+
+
+
+    # Adding labels and title
+    plt.xlabel(xlabel, fontsize=15)
+    plt.ylabel(ylabel, fontsize=20)
+    plt.title(title, fontsize=18)
+    plt.xticks(pos + bar_width, dataset_names, fontsize=20)
+    plt.yticks(fontsize=20) 
+
+    # Adding a legend
+    plt.legend()
+
+    # Show the plot
+    plt.tight_layout()
+    if savefig is not None:
+        plot_fstr = f"./output/comparison.pdf"        
+        plt.savefig(plot_fstr, format='pdf')
+        print("Save to ==> ", plot_fstr)
+
+
+    plt.show()
+
+
+def plot_results8(performance_metrics, dataset_names, title="Comparison of Iterations for Cover Ratio >= 70%", xlabel="Datasets", ylabel="Objective Value", savefig=f"./output/comparison.pdf"):    
 
     # Data provided by the user
     method_names = ["Greedy", "Approx", "Random"]
