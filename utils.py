@@ -777,7 +777,8 @@ MASK = [1]*AlgorithmCount
 def experiment8(n, W, Y, Z, m=0, max_iterations=-1, early_stop=1., repeatk=1, plot=False, mask=MASK):
 
     if m==0:
-        pass # TODO: compute m from Z
+        # compute m from Z
+        m = np.sum(Z < 0)
 
     if max_iterations == -1:
         max_iterations = n
@@ -931,10 +932,10 @@ def plot_results(performance_metrics, dataset_names, title="Comparison of Iterat
     plt.show()
 
 
-def plot_results8(performance_metrics, dataset_names, title="Comparison of Iterations for Cover Ratio >= 70%", xlabel="Datasets", ylabel="Objective Value", savefig=f"./output/comparison.pdf"):    
+def plot_results8(performance_metrics, dataset_names, method_names=["Greedy", "Approx", "Random"], title="Comparison of Iterations for Cover Ratio >= 70%", xlabel="Datasets", ylabel="Objective Value", savefig=f"./output/comparison.pdf"):    
 
     # Data provided by the user
-    method_names = ["Greedy", "Approx", "Random"]
+    method_names = method_names
     dataset_names = dataset_names
     # metrics = [[1,2,3], [2,3,4], [3,4,5], [4,5,6]] 
     metrics = performance_metrics
